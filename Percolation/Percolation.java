@@ -6,6 +6,7 @@ public class Percolation {
     private int openSites;
     private final int len;
     private final WeightedQuickUnionUF uf;
+    private final WeightedQuickUnionUF ufBackWash;
 
     public Percolation(int n)// create n-by-n grid, with all sites blocked
     {
@@ -17,6 +18,7 @@ public class Percolation {
         }
 
         uf = new WeightedQuickUnionUF((len * len) + 3);
+        ufBackWash = new WeightedQuickUnionUF((len*len) + 2);
 
         nodes = new boolean[len][len];
         for (int col = 0; col < len; col++) {
@@ -42,10 +44,13 @@ public class Percolation {
         if (row == 1) {
             q = (len * len) + 1;
             uf.union(p, q);
+            ufBackWash.union(p,q);
         }
         else {
-            if (isOpen(row - 1, col))
+            if (isOpen(row - 1, col)) {
                 uf.union(p, q);
+                ufBackWash.union(p,q);
+            }
         }
 
         q = (col - 1) + ((row * len) + 1);
@@ -55,19 +60,27 @@ public class Percolation {
         }
         else {
             if (isOpen(row + 1, col))
+            {
                 uf.union(p, q);
+                ufBackWash.union(p,q);
+            }
         }
 
         q = (col - 2) + ((row - 1) * len) + 1;
         if (col != 1)
             if (isOpen(row, col - 1))
+            {
                 uf.union(p, q);
+                ufBackWash.union(p,q);
+            }
 
         q = (col) + ((row - 1) * len) + 1;
         if (col != len)
             if (isOpen(row, col + 1))
+            {
                 uf.union(p, q);
-
+                ufBackWash.union(p,q);
+            }
 
         nodes[row - 1][col - 1] = true;
         openSites++;
@@ -90,7 +103,7 @@ public class Percolation {
 
         if (isOpen(row, col)) {
             int p = (col - 1) + ((row - 1) * len) + 1;
-            return uf.connected((len * len) + 1, p);
+            return ufBackWash.connected((len * len) + 1, p);
         }
         else {
             return false;
