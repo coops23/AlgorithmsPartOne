@@ -13,6 +13,11 @@ public class PercolationStats {
     public PercolationStats(int n,
                             int trials)    // perform trials independent experiments on an n-by-n grid
     {
+        if(n <= 0 || trials <= 0)
+        {
+            throw new java.lang.IllegalArgumentException("Invalid n or trials argument");
+        }
+
         double[] samples = new double[trials];
         double total = 0;
 
