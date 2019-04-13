@@ -12,9 +12,9 @@ public class Permutation {
         }
 
         Iterator<String> iter  = deck.iterator();
-        for(int i = 0; i < count; i++)
+        for (int i = 0; i < count; i++)
         {
-            if(iter.hasNext())
+            if (iter.hasNext())
             {
                 System.out.println(iter.next());
             }
