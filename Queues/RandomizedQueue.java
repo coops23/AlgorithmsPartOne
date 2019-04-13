@@ -27,9 +27,9 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
 
     public void enqueue(Item item)           // add the item
     {
-        if(item == null) throw new java.lang.IllegalArgumentException();
+        if (item == null) throw new java.util.NoSuchElementException();
 
-        //Basically inserting an element on the front
+        // Basically inserting an element on the front
         if (count == 0) {
             Node newNode = new Node();
 
@@ -50,9 +50,9 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
 
     public Item dequeue()                    // remove and return a random item
     {
-        if(count == 0) throw new java.util.NoSuchElementException();
+        if (count == 0) throw new java.util.NoSuchElementException();
 
-        //Would normally just pop the front element but here we need to randomize things
+        // Would normally just pop the front element but here we need to randomize things
         int indexToRemove = StdRandom.uniform(0, count - 1);
 
         int i = 0;
@@ -72,7 +72,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
 
     public Item sample()                     // return a random item (but do not remove it)
     {
-        if(count == 0) throw new java.util.NoSuchElementException();
+        if (count == 0) throw new java.util.NoSuchElementException();
 
         int indexToGet = StdRandom.uniform(0, count - 1);
 
@@ -93,13 +93,13 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
 
     private class ListRandomIterator implements Iterator<Item> {
         private int currIndex;
-        private int order[];
+        private final int[] order;
 
         public ListRandomIterator(int count)
         {
             order = new int[count];
 
-            for(int i = 0; i < count; i++)
+            for (int i = 0; i < count; i++)
             {
                 order[i] = i;
             }
@@ -117,8 +117,11 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         public Item next() {
             Node node = first;
             int i = 0;
+
+            if (currIndex >= count) throw new java.util.NoSuchElementException();
+
             int index = order[currIndex];
-            while(i != index)
+            while (i != index)
             {
                 node = node.next;
                 i++;
@@ -139,7 +142,8 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         System.out.println("The deck is empty: " + deck.isEmpty());
         System.out.println("Count is: " + deck.size());
 
-        for(int i = 0; i < testCount; i++){
+        for (int i = 0; i < testCount; i++)
+        {
             deck.enqueue(i);
         }
 
@@ -152,7 +156,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         System.out.println("Count after removing two: " + deck.size() + " should be " + (testCount - 2));
 
         Iterator<Integer> i  = deck.iterator();
-        while(i.hasNext()) {
+        while (i.hasNext()) {
             System.out.println(i.next());
         }
     }
