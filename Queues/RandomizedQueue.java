@@ -53,7 +53,8 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         if (count == 0) throw new java.util.NoSuchElementException();
 
         // Would normally just pop the front element but here we need to randomize things
-        int indexToRemove = StdRandom.uniform(0, count - 1);
+        int indexToRemove = 0;
+        if(count > 1) indexToRemove = StdRandom.uniform(1, count) - 1;
 
         int i = 0;
         Node curr = first;
@@ -74,7 +75,8 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
     {
         if (count == 0) throw new java.util.NoSuchElementException();
 
-        int indexToGet = StdRandom.uniform(0, count - 1);
+        int indexToGet = 0;
+        if(count > 1) indexToGet = StdRandom.uniform(1, count) - 1;
 
         int i = 0;
         Node curr = first;
@@ -135,29 +137,10 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
 
     public static void main(String[] args)   // unit testing (optional)
     {
-        final int testCount = 10;
-
-        RandomizedQueue<Integer> deck = new RandomizedQueue<Integer>();
-
-        System.out.println("The deck is empty: " + deck.isEmpty());
-        System.out.println("Count is: " + deck.size());
-
-        for (int i = 0; i < testCount; i++)
-        {
-            deck.enqueue(i);
-        }
-
-        System.out.println("Count is: " + deck.size() + " should be " + testCount);
-        System.out.println("The deck is NOT empty: " + !deck.isEmpty());
-
-        deck.dequeue();
-        deck.dequeue();
-
-        System.out.println("Count after removing two: " + deck.size() + " should be " + (testCount - 2));
-
-        Iterator<Integer> i  = deck.iterator();
-        while (i.hasNext()) {
-            System.out.println(i.next());
-        }
+        RandomizedQueue<Integer> rq = new RandomizedQueue<Integer>();
+        System.out.println(rq.isEmpty());
+        rq.enqueue(40);
+        System.out.println(rq.size());
+        rq.dequeue();
     }
 }
