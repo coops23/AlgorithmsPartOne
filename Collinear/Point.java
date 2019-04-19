@@ -10,7 +10,10 @@
 
 import edu.princeton.cs.algs4.StdDraw;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 public class Point implements Comparable<Point> {
 
@@ -153,6 +156,32 @@ public class Point implements Comparable<Point> {
      * Unit tests the Point data type.
      */
     public static void main(String[] args) {
-        /* YOUR CODE HERE */
+        List<Point> points = new ArrayList<Point>();
+
+        points.add(new Point(9000, 9000));
+        points.add(new Point(8000, 8000));
+        points.add(new Point(5000, 5000));
+        points.add(new Point(4000, 4000));
+        points.add(new Point(3000, 3000));
+        points.add(new Point(2000, 2000));
+        points.add(new Point(1000, 1000));
+        points.add(new Point(7000, 7000));
+        points.add(new Point(6000, 6000));
+
+        Collections.sort(points);
+
+        System.out.println("Printing points from least to greatest");
+        for (Point p : points) {
+            System.out.print(p.toString() + "\n");
+        }
+        System.out.println("");
+
+        Point origin = new Point(5000, 5000);
+        Collections.sort(points, origin.slopeOrder());
+
+        System.out.println("Printing slopes from origin from least to greatest");
+        for (Point p : points) {
+            System.out.print(p.toString() + "\n");
+        }
     }
 }
