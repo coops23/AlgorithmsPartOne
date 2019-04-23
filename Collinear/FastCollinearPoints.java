@@ -14,17 +14,26 @@ import java.util.List;
 
 public class FastCollinearPoints {
     private int segmentCount;
+    private List<Point> pointsList;
     private List<LineSegment> lineSegments;
 
-    public FastCollinearPoints(Point[] points)     // finds all line segments containing 4 or more points
+    public FastCollinearPoints(
+            Point[] points)     // finds all line segments containing 4 or more points
     {
         segmentCount = 0;
         lineSegments = new ArrayList<LineSegment>();
+        pointsList = new ArrayList<Point>();
+        for (int i = 0; i < points.length; i++) {
+            pointsList.add(points[i]);
+        }
+        Collections.sort(pointsList);
 
-        for (int i = 0; i < points.length; i++)
-        {
+        for (int i = 0; i < pointsList.size(); i++) {
             Point origin = points[i];
             List<Point> slopeSortedPoints = new ArrayList<Point>();
+            for (int y = 0; y < i; y++) {
+                slopeSortedPoints.add(points[y]);
+            }
             for (int y = i + 1; y < points.length; y++) {
                 slopeSortedPoints.add(points[y]);
             }
@@ -34,6 +43,7 @@ public class FastCollinearPoints {
             double prevSlope = 0;
             Point prevPoint = origin;
             int count = 0;
+            List<Point> collinearPoints = new ArrayList<Point>();
             for (Point p : slopeSortedPoints) {
                 double slope = origin.slopeTo(p);
 
@@ -41,11 +51,15 @@ public class FastCollinearPoints {
                     prevSlope = slope;
                     prevPoint = p;
                     count++;
+                    collinearPoints.add(p);
                 }
                 else {
                     if (count >= 3) {
                         segmentCount++;
-                        lineSegments.add(new LineSegment(origin, prevPoint));
+                        Collections.sort(collinearPoints);
+                        lineSegments.add(new LineSegment(origin, collinearPoints
+                                .get(collinearPoints.size() - 1)));
+                        collinearPoints.clear();
                     }
 
                     prevSlope = slope;
@@ -53,9 +67,11 @@ public class FastCollinearPoints {
                 }
             }
 
-            if(count >= 3) {
+            if (count >= 3) {
                 segmentCount++;
-                lineSegments.add(new LineSegment(origin, prevPoint));
+                Collections.sort(collinearPoints);
+                lineSegments.add(new LineSegment(origin,
+                                                 collinearPoints.get(collinearPoints.size() - 1)));
             }
         }
     }
@@ -79,7 +95,7 @@ public class FastCollinearPoints {
     public static void main(String[] args) {
 
         // read the n points from a file
-        In in = new In("input6.txt");
+        In in = new In("input9.txt");
         int n = in.readInt();
         Point[] points = new Point[n];
         for (int i = 0; i < n; i++) {
