@@ -20,13 +20,34 @@ public class FastCollinearPoints {
     public FastCollinearPoints(
             Point[] points)     // finds all line segments containing 4 or more points
     {
+        if (points == null) {
+            throw new java.lang.IllegalArgumentException();
+        }
+
         segmentCount = 0;
         lineSegments = new ArrayList<LineSegment>();
         pointsList = new ArrayList<Point>();
         for (int i = 0; i < points.length; i++) {
-            pointsList.add(points[i]);
+            if (points[i] != null) {
+                pointsList.add(points[i]);
+            }
+            else {
+                throw new java.lang.IllegalArgumentException();
+            }
         }
         Collections.sort(pointsList);
+
+        if(pointsList.size() > 1) {
+            Point prev = pointsList.get(0);
+            for (int i = 1; i < pointsList.size(); i++) {
+                Point p = pointsList.get(i);
+                if (p.compareTo(prev) == 0) {
+                    throw new java.lang.IllegalArgumentException();
+                }
+
+                prev = p;
+            }
+        }
 
         for (int i = 0; i < pointsList.size(); i++) {
             Point origin = points[i];

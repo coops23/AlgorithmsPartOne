@@ -4,6 +4,10 @@
  *  Description:
  **************************************************************************** */
 
+import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.StdDraw;
+import edu.princeton.cs.algs4.StdOut;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,12 +17,34 @@ public class BruteCollinearPoints {
     private List<LineSegment> lineSegments;
 
     public BruteCollinearPoints(Point[] points) {
+
+        if (points == null) {
+            throw new java.lang.IllegalArgumentException();
+        }
+
         lineSegments = new ArrayList<LineSegment>();
         List<Point> pointList = new ArrayList<Point>();
         for (int i = 0; i < points.length; i++) {
-            pointList.add(points[i]);
+            if (points[i] != null) {
+                pointList.add(points[i]);
+            }
+            else {
+                throw new java.lang.IllegalArgumentException();
+            }
         }
         Collections.sort(pointList);
+
+        if(pointList.size() > 1) {
+            Point prev = pointList.get(0);
+            for (int i = 1; i < pointList.size(); i++) {
+                Point p = pointList.get(i);
+                if (p.compareTo(prev) == 0) {
+                    throw new java.lang.IllegalArgumentException();
+                }
+
+                prev = p;
+            }
+        }
 
         for (int p0 = 0; p0 < pointList.size(); p0++) {
             for (int p1 = p0 + 1; p1 < pointList.size(); p1++) {
@@ -54,32 +80,31 @@ public class BruteCollinearPoints {
     }
 
     public static void main(String[] args) {
-        List<Point> points = new ArrayList<Point>();
-
-        points.add(new Point(10, 2560));
-        points.add(new Point(10, 1280));
-        points.add(new Point(10, 640));
-        points.add(new Point(10, 320));
-        points.add(new Point(10, 160));
-        points.add(new Point(10, 40));
-        points.add(new Point(10, 80));
-        points.add(new Point(10, 20));
-        points.add(new Point(10, 10));
-        points.add(new Point(0, 0));
-        points.add(new Point(1, 0));
-        points.add(new Point(0, 1));
-
-        Point[] returnValue = new Point[points.size()];
-
-        for (int i = 0; i < returnValue.length; i++) {
-            returnValue[i] = points.get(i);
+        // read the n points from a file
+        In in = new In("input8.txt");
+        int n = in.readInt();
+        Point[] points = new Point[n];
+        for (int i = 0; i < n; i++) {
+            int x = in.readInt();
+            int y = in.readInt();
+            points[i] = new Point(x, y);
         }
 
-        BruteCollinearPoints brute = new BruteCollinearPoints(returnValue);
-
-        System.out.print(brute.numberOfSegments() + "\n");
-        for (LineSegment segment : brute.segments()) {
-            System.out.print(segment.toString() + "\n");
+        // draw the points
+        StdDraw.enableDoubleBuffering();
+        StdDraw.setXscale(0, 32768);
+        StdDraw.setYscale(0, 32768);
+        for (Point p : points) {
+            p.draw();
         }
+        StdDraw.show();
+
+        // print and draw the line segments
+        FastCollinearPoints collinear = new FastCollinearPoints(points);
+        for (LineSegment segment : collinear.segments()) {
+            StdOut.println(segment);
+            segment.draw();
+        }
+        StdDraw.show();
     }
 }
