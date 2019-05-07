@@ -1,38 +1,37 @@
 import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.Stack;
 import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.StdRandom;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Board {
-    private final int[][] _blocks;
+    private final int[][] tiles;
     private final int n;
     private int moves;
-    private List<Board> neighbors;
+    private Stack<Board> neighbors;
+    private final int openRow;
+    private final int openCol;
 
     public Board(
             int[][] blocks)           // construct a board from an n-by-n array of blocks (where blocks[i][j] = block in row i, column j)
     {
         n = blocks.length;
         boolean openPositionFound = false;
-        neighbors = new ArrayList<Board>();
-        _blocks = new int[n][n];
+        neighbors = new Stack<Board>();
+        tiles = new int[n][n];
         moves = 0;
 
         if (n <= 0) {
             throw new IllegalArgumentException("blocks are empty!");
         }
 
-        int openRow = 0;
-        int openCol = 0;
+        int x = 0, j = 0;
         for (int i = 0; i < n; i++) {
             for (int y = 0; y < n; y++) {
-                _blocks[i][y] = blocks[i][y];
+                tiles[i][y] = blocks[i][y];
                 if (blocks[i][y] == 0) {
                     openPositionFound = true;
-                    openRow = i;
-                    openCol = y;
+                    x = i;
+                    j = y;
                 }
             }
         }
@@ -41,22 +40,8 @@ public class Board {
             throw new IllegalArgumentException("No open spot!");
         }
 
-        if (openRow > 0 && openRow < n - 1 && openCol > 0 && openCol < n - 1) {
-            
-        }
-        else if (openRow == 0 && openCol == 0) {
-
-        }
-        else if (openRow == 0 && openCol == n - 1) {
-
-        }
-        else if (openRow == n - 1 && openCol == 0) {
-
-        }
-        else if (openRow == n - 1 && openCol == n - 1) {
-
-        }
-        else if ()
+        openRow = x;
+        openCol = j;
     }
 
     public int dimension()                 // board dimension n
@@ -71,7 +56,7 @@ public class Board {
 
         for (int i = 0; i < n; i++) {
             for (int y = 0; y < n; y++) {
-                if (_blocks[i][y] != iter) {
+                if (tiles[i][y] != iter) {
                     count++;
                 }
                 iter++;
@@ -88,10 +73,10 @@ public class Board {
 
         for (int i = 0; i < n; i++) {
             for (int y = 0; y < n; y++) {
-                if (_blocks[i][y] != iter) {
+                if (tiles[i][y] != iter) {
                     //say 1 was in position i = 2 and y = 2
-                    int desiredRow = _blocks[i][y] / n;
-                    int desiredColumn = _blocks[i][y] - (desiredRow * n) - 1;
+                    int desiredRow = tiles[i][y] / n;
+                    int desiredColumn = tiles[i][y] - (desiredRow * n) - 1;
                     int deltaRow = java.lang.Math.abs(desiredRow - i);
                     int deltaColumn = java.lang.Math.abs(desiredColumn - y);
                     int delta = deltaColumn + deltaRow;
@@ -110,7 +95,7 @@ public class Board {
         int iter = 1;
         for (int i = 0; i < n; i++) {
             for (int y = 0; y < n; y++) {
-                if (_blocks[i][y] != iter) {
+                if (tiles[i][y] != iter) {
                     if (iter != n * n) {
                         return false;
                     }
@@ -124,39 +109,77 @@ public class Board {
 
     public Board twin()                    // a board that is obtained by exchanging any pair of blocks
     {
-        int[][] tiles = new int[n][n];
-        for (int i = 0; i < n; i++) {
-            for (int y = 0; y < n; y++) {
-                tiles[i][y] = _blocks[i][y];
-            }
-        }
+        int[][] tempTiles = new int[n][n];
+        cpy(tempTiles);
 
-        int pos0 = StdRandom.uniform(0, n * n - 1);
-        int pos1 = StdRandom.uniform(0, n * n - 1);
+        int pos0 = StdRandom.uniform(0, (n * n) - 1);
+        int pos1 = StdRandom.uniform(0, (n * n) - 1);
 
         while (pos1 == pos0) {
             pos1 = StdRandom.uniform(0, n * n - 1);
         }
 
-        int i0 = pos0 / n;
-        int j0 = pos0 - (i0 * n);
-        int i1 = pos1 / n;
-        int j1 = pos1 - (i1 * n);
+        swap(tempTiles, row(pos0), col(pos0), row(pos1), col(pos1));
 
-        int temp = tiles[i0][j0];
-        tiles[i0][j0] = tiles[i1][j1];
-        tiles[i1][j1] = temp;
-
-        return new Board(tiles);
+        return new Board(tempTiles);
     }
 
     public boolean equals(Object y)        // does this board equal y?
     {
+        if (y == this) return true;
+        if (y == null) return false;
+        if (y.getClass() != this.getClass()) return false;
+
+        final Board that = (Board) y;
+        for(int i = 0; i < n ; i++)
+        {
+            for(int j = 0; j < n ; j++)
+            {
+                if(that.tiles[i][j] != this.tiles[i][j])
+                {
+                    return false;
+                }
+            }
+        }
+
         return true;
     }
 
     public Iterable<Board> neighbors()     // all neighboring boards
     {
+        int[][] tempTiles = new int[n][n];
+        //swap upper
+        if(openRow > 0)
+        {
+            cpy(tempTiles);
+            swap(tempTiles, openRow, openCol, openRow - 1, openCol);
+            neighbors.push(new Board(tempTiles));
+        }
+
+        //swap lower
+        if(openRow < n - 1)
+        {
+            cpy(tempTiles);
+            swap(tempTiles, openRow, openCol, openRow + 1, openCol);
+            neighbors.push(new Board(tempTiles));
+        }
+
+        //swap left
+        if(openCol > 0)
+        {
+            cpy(tempTiles);
+            swap(tempTiles, openRow, openCol, openRow, openCol - 1);
+            neighbors.push(new Board(tempTiles));
+        }
+
+        //swap right
+        if(openCol < n - 1)
+        {
+            cpy(tempTiles);
+            swap(tempTiles, openRow, openCol, openRow, openCol + 1);
+            neighbors.push(new Board(tempTiles));
+        }
+
         return neighbors;
     }
 
@@ -167,7 +190,7 @@ public class Board {
         for (int i = 0; i < n; i++) {
             String row = "";
             for (int y = 0; y < n; y++) {
-                row += String.valueOf(_blocks[i][y]) + " ";
+                row += String.valueOf(tiles[i][y]) + " ";
             }
             row += "\n";
 
@@ -177,12 +200,31 @@ public class Board {
         return message;
     }
 
-    private int[][] swap(int[][] tiles, int rowA, int colA, int rowB, int colB) {
-        int temp = tiles[rowA][colA];
-        tiles[rowA][colA] = tiles[rowB][colB];
-        tiles[rowB][colB] = temp;
+    private void swap(int[][] swappedTiles, int rowA, int colA, int rowB, int colB) {
+        int temp = swappedTiles[rowA][colA];
+        swappedTiles[rowA][colA] = swappedTiles[rowB][colB];
+        swappedTiles[rowB][colB] = temp;
+    }
 
-        return tiles;
+    private void cpy(int[][] temp)
+    {
+        for (int i = 0; i < n; i++) {
+            for (int y = 0; y < n; y++) {
+                temp[i][y] = tiles[i][y];
+            }
+        }
+    }
+
+    private int row(int pos) {
+        return pos / n;
+    }
+
+    private int col(int pos) {
+        return pos - (row(pos) * n);
+    }
+
+    private int pos(int row, int col) {
+        return (row * n) + col;
     }
 
     public static void main(String[] args) // unit tests (not graded)
@@ -203,5 +245,18 @@ public class Board {
         StdOut.println(board.isGoal());
         StdOut.println(twin.toString());
         StdOut.println(twin.isGoal());
+
+        StdOut.println("Now printing out neighbors");
+        Iterable<Board> it = board.neighbors();
+        for(Board i : it)
+        {
+            StdOut.println(i);
+            StdOut.println(i.equals(board));
+        }
+
+        StdOut.println(board.equals(board));
+        StdOut.println(board.equals(null));
+        Board board2 = new Board(tiles);
+        StdOut.println(board2.equals(board));
     }
 }
