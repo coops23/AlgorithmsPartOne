@@ -6,7 +6,6 @@ import edu.princeton.cs.algs4.StdRandom;
 public class Board {
     private final int[][] tiles;
     private final int n;
-    private int moves;
     private Stack<Board> neighbors;
     private final int openRow;
     private final int openCol;
@@ -18,7 +17,6 @@ public class Board {
         boolean openPositionFound = false;
         neighbors = new Stack<Board>();
         tiles = new int[n][n];
-        moves = 0;
 
         if (n <= 0) {
             throw new IllegalArgumentException("blocks are empty!");
@@ -51,7 +49,7 @@ public class Board {
 
     public int hamming()                   // number of blocks out of place
     {
-        int count = moves;
+        int count = 0;
         int iter = 1;
 
         for (int i = 0; i < n; i++) {
@@ -68,7 +66,7 @@ public class Board {
 
     public int manhattan()                 // sum of Manhattan distances between blocks and goal
     {
-        int count = moves;
+        int count = 0;
         int iter = 1;
 
         for (int i = 0; i < n; i++) {
@@ -131,12 +129,9 @@ public class Board {
         if (y.getClass() != this.getClass()) return false;
 
         final Board that = (Board) y;
-        for(int i = 0; i < n ; i++)
-        {
-            for(int j = 0; j < n ; j++)
-            {
-                if(that.tiles[i][j] != this.tiles[i][j])
-                {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (that.tiles[i][j] != this.tiles[i][j]) {
                     return false;
                 }
             }
@@ -149,32 +144,28 @@ public class Board {
     {
         int[][] tempTiles = new int[n][n];
         //swap upper
-        if(openRow > 0)
-        {
+        if (openRow > 0) {
             cpy(tempTiles);
             swap(tempTiles, openRow, openCol, openRow - 1, openCol);
             neighbors.push(new Board(tempTiles));
         }
 
         //swap lower
-        if(openRow < n - 1)
-        {
+        if (openRow < n - 1) {
             cpy(tempTiles);
             swap(tempTiles, openRow, openCol, openRow + 1, openCol);
             neighbors.push(new Board(tempTiles));
         }
 
         //swap left
-        if(openCol > 0)
-        {
+        if (openCol > 0) {
             cpy(tempTiles);
             swap(tempTiles, openRow, openCol, openRow, openCol - 1);
             neighbors.push(new Board(tempTiles));
         }
 
         //swap right
-        if(openCol < n - 1)
-        {
+        if (openCol < n - 1) {
             cpy(tempTiles);
             swap(tempTiles, openRow, openCol, openRow, openCol + 1);
             neighbors.push(new Board(tempTiles));
@@ -206,8 +197,7 @@ public class Board {
         swappedTiles[rowB][colB] = temp;
     }
 
-    private void cpy(int[][] temp)
-    {
+    private void cpy(int[][] temp) {
         for (int i = 0; i < n; i++) {
             for (int y = 0; y < n; y++) {
                 temp[i][y] = tiles[i][y];
@@ -248,8 +238,7 @@ public class Board {
 
         StdOut.println("Now printing out neighbors");
         Iterable<Board> it = board.neighbors();
-        for(Board i : it)
-        {
+        for (Board i : it) {
             StdOut.println(i);
             StdOut.println(i.equals(board));
         }
