@@ -5,20 +5,16 @@ import edu.princeton.cs.algs4.StdRandom;
 
 public class Board {
     private final int[][] tiles;
-    private int[][] twinTiles;
     private final int n;
-    private Stack<Board> neighbors;
     private final int openRow;
     private final int openCol;
-    private boolean neighborsCreated;
+    private int swapPos0;
+    private int swapPos1;
 
-    public Board(
-            int[][] blocks)           // construct a board from an n-by-n array of blocks (where blocks[i][j] = block in row i, column j)
-    {
-        neighborsCreated = false;
+    public Board(int[][] blocks) {
         n = blocks.length;
         boolean openPositionFound = false;
-        neighbors = new Stack<Board>();
+
         tiles = new int[n][n];
 
         if (n <= 0) {
@@ -44,24 +40,19 @@ public class Board {
         openRow = x;
         openCol = j;
 
-        twinTiles = new int[n][n];
-        cpy(twinTiles);
-
-        int pos0 = 0;
+        swapPos0 = 0;
         int value = 0;
         while (value == 0) {
-            pos0 = StdRandom.uniform(0, (n * n));
-            value = tiles[row(pos0)][col(pos0)];
+            swapPos0 = StdRandom.uniform(0, (n * n));
+            value = tiles[row(swapPos0)][col(swapPos0)];
         }
 
-        int pos1 = 0;
+        swapPos1 = 0;
         value = 0;
-        while (pos1 == pos0 || value == 0) {
-            pos1 = StdRandom.uniform(0, (n * n));
-            value = tiles[row(pos1)][col(pos1)];
+        while (swapPos1 == swapPos0 || value == 0) {
+            swapPos1 = StdRandom.uniform(0, (n * n));
+            value = tiles[row(swapPos1)][col(swapPos1)];
         }
-
-        swap(twinTiles, row(pos0), col(pos0), row(pos1), col(pos1));
     }
 
     public int dimension()                 // board dimension n
@@ -129,6 +120,11 @@ public class Board {
 
     public Board twin()                    // a board that is obtained by exchanging any pair of blocks
     {
+        int[][] twinTiles = new int[n][n];
+
+        cpy(twinTiles);
+        swap(twinTiles, row(swapPos0), col(swapPos0), row(swapPos1), col(swapPos1));
+
         return new Board(twinTiles);
     }
 
@@ -156,37 +152,35 @@ public class Board {
 
     public Iterable<Board> neighbors()     // all neighboring boards
     {
-        if (!neighborsCreated) {
-            int[][] tempTiles = new int[n][n];
-            //swap upper
-            if (openRow > 0) {
-                cpy(tempTiles);
-                swap(tempTiles, openRow, openCol, openRow - 1, openCol);
-                neighbors.push(new Board(tempTiles));
-            }
+        Stack<Board> neighbors = new Stack<Board>();
 
-            //swap lower
-            if (openRow < n - 1) {
-                cpy(tempTiles);
-                swap(tempTiles, openRow, openCol, openRow + 1, openCol);
-                neighbors.push(new Board(tempTiles));
-            }
+        int[][] tempTiles = new int[n][n];
+        //swap upper
+        if (openRow > 0) {
+            cpy(tempTiles);
+            swap(tempTiles, openRow, openCol, openRow - 1, openCol);
+            neighbors.push(new Board(tempTiles));
+        }
 
-            //swap left
-            if (openCol > 0) {
-                cpy(tempTiles);
-                swap(tempTiles, openRow, openCol, openRow, openCol - 1);
-                neighbors.push(new Board(tempTiles));
-            }
+        //swap lower
+        if (openRow < n - 1) {
+            cpy(tempTiles);
+            swap(tempTiles, openRow, openCol, openRow + 1, openCol);
+            neighbors.push(new Board(tempTiles));
+        }
 
-            //swap right
-            if (openCol < n - 1) {
-                cpy(tempTiles);
-                swap(tempTiles, openRow, openCol, openRow, openCol + 1);
-                neighbors.push(new Board(tempTiles));
-            }
+        //swap left
+        if (openCol > 0) {
+            cpy(tempTiles);
+            swap(tempTiles, openRow, openCol, openRow, openCol - 1);
+            neighbors.push(new Board(tempTiles));
+        }
 
-            neighborsCreated = true;
+        //swap right
+        if (openCol < n - 1) {
+            cpy(tempTiles);
+            swap(tempTiles, openRow, openCol, openRow, openCol + 1);
+            neighbors.push(new Board(tempTiles));
         }
 
         return neighbors;
@@ -230,11 +224,7 @@ public class Board {
     private int col(int pos) {
         return pos - (row(pos) * n);
     }
-
-    private int pos(int row, int col) {
-        return (row * n) + col;
-    }
-
+    
     public static void main(String[] args) // unit tests (not graded)
     {
         In in = new In("puzzle2x2-unsolvable1.txt");
