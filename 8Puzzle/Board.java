@@ -112,18 +112,28 @@ public class Board {
     public Board twin()                    // a board that is obtained by exchanging any pair of blocks
     {
         int[][] tempTiles = new int[n][n];
+        Board twin;
         cpy(tempTiles);
 
-        int pos0 = StdRandom.uniform(0, (n * n) - 1);
-        int pos1 = StdRandom.uniform(0, (n * n) - 1);
+        int value = 0;
+        int pos0 = 0;
+        while(value == 0)
+        {
+            pos0 = StdRandom.uniform(0, (n * n) - 1);
+            value = tempTiles[row(pos0)][col(pos0)];
+        }
 
-        while (pos1 == pos0) {
-            pos1 = StdRandom.uniform(0, n * n - 1);
+        int pos1 = 0;
+        value = 0;
+        while(value == 0 && pos1 == pos0) {
+            pos1 = StdRandom.uniform(0, (n * n) - 1);
+            value = tempTiles[row(pos1)][col(pos1)];
         }
 
         swap(tempTiles, row(pos0), col(pos0), row(pos1), col(pos1));
+        twin = new Board(tempTiles);
 
-        return new Board(tempTiles);
+        return twin;
     }
 
     public boolean equals(Object y)        // does this board equal y?
@@ -133,6 +143,12 @@ public class Board {
         if (y.getClass() != this.getClass()) return false;
 
         final Board that = (Board) y;
+
+        if(this.n != that.n)
+        {
+            return false;
+        }
+
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 if (that.tiles[i][j] != this.tiles[i][j]) {
@@ -237,5 +253,7 @@ public class Board {
         StdOut.println(board.manhattan());
         StdOut.println(board.hamming());
         StdOut.println(board);
+        Board twin = board.twin();
+        StdOut.println(twin);
     }
 }
