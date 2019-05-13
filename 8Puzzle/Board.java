@@ -5,14 +5,17 @@ import edu.princeton.cs.algs4.StdRandom;
 
 public class Board {
     private final int[][] tiles;
+    private int[][] twinTiles;
     private final int n;
     private Stack<Board> neighbors;
     private final int openRow;
     private final int openCol;
+    private boolean neighborsCreated;
 
     public Board(
             int[][] blocks)           // construct a board from an n-by-n array of blocks (where blocks[i][j] = block in row i, column j)
     {
+        neighborsCreated = false;
         n = blocks.length;
         boolean openPositionFound = false;
         neighbors = new Stack<Board>();
@@ -40,6 +43,25 @@ public class Board {
 
         openRow = x;
         openCol = j;
+
+        twinTiles = new int[n][n];
+        cpy(twinTiles);
+
+        int pos0 = 0;
+        int value = 0;
+        while (value == 0) {
+            pos0 = StdRandom.uniform(0, (n * n));
+            value = tiles[row(pos0)][col(pos0)];
+        }
+
+        int pos1 = 0;
+        value = 0;
+        while (pos1 == pos0 || value == 0) {
+            pos1 = StdRandom.uniform(0, (n * n));
+            value = tiles[row(pos1)][col(pos1)];
+        }
+
+        swap(twinTiles, row(pos0), col(pos0), row(pos1), col(pos1));
     }
 
     public int dimension()                 // board dimension n
@@ -57,8 +79,7 @@ public class Board {
             int y = col(pos - 1);
             int value = tiles[i][y];
 
-            if(value != pos)
-            {
+            if (value != pos) {
                 hamming++;
             }
 
@@ -78,8 +99,7 @@ public class Board {
             int y = col(pos - 1);
             int value = tiles[i][y];
 
-            if(value != 0)
-            {
+            if (value != 0) {
                 manhatten += java.lang.Math.abs(row(value - 1) - i);
                 manhatten += java.lang.Math.abs(col(value - 1) - y);
             }
@@ -96,10 +116,8 @@ public class Board {
         while (pos < (n * n) - 1) {
             int i = row(pos - 1);
             int y = col(pos - 1);
-            int value = tiles[i][y];
 
-            if (tiles[i][y] != pos)
-            {
+            if (tiles[i][y] != pos) {
                 return false;
             }
 
@@ -111,19 +129,7 @@ public class Board {
 
     public Board twin()                    // a board that is obtained by exchanging any pair of blocks
     {
-        int[][] tempTiles = new int[n][n];
-        cpy(tempTiles);
-
-        int pos0 = StdRandom.uniform(0, (n * n) - 1);
-        int pos1 = StdRandom.uniform(0, (n * n) - 1);
-
-        while (pos1 == pos0) {
-            pos1 = StdRandom.uniform(0, n * n - 1);
-        }
-
-        swap(tempTiles, row(pos0), col(pos0), row(pos1), col(pos1));
-
-        return new Board(tempTiles);
+        return new Board(twinTiles);
     }
 
     public boolean equals(Object y)        // does this board equal y?
@@ -133,6 +139,10 @@ public class Board {
         if (y.getClass() != this.getClass()) return false;
 
         final Board that = (Board) y;
+        if (that.n != this.n) {
+            return false;
+        }
+
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 if (that.tiles[i][j] != this.tiles[i][j]) {
@@ -146,33 +156,37 @@ public class Board {
 
     public Iterable<Board> neighbors()     // all neighboring boards
     {
-        int[][] tempTiles = new int[n][n];
-        //swap upper
-        if (openRow > 0) {
-            cpy(tempTiles);
-            swap(tempTiles, openRow, openCol, openRow - 1, openCol);
-            neighbors.push(new Board(tempTiles));
-        }
+        if (!neighborsCreated) {
+            int[][] tempTiles = new int[n][n];
+            //swap upper
+            if (openRow > 0) {
+                cpy(tempTiles);
+                swap(tempTiles, openRow, openCol, openRow - 1, openCol);
+                neighbors.push(new Board(tempTiles));
+            }
 
-        //swap lower
-        if (openRow < n - 1) {
-            cpy(tempTiles);
-            swap(tempTiles, openRow, openCol, openRow + 1, openCol);
-            neighbors.push(new Board(tempTiles));
-        }
+            //swap lower
+            if (openRow < n - 1) {
+                cpy(tempTiles);
+                swap(tempTiles, openRow, openCol, openRow + 1, openCol);
+                neighbors.push(new Board(tempTiles));
+            }
 
-        //swap left
-        if (openCol > 0) {
-            cpy(tempTiles);
-            swap(tempTiles, openRow, openCol, openRow, openCol - 1);
-            neighbors.push(new Board(tempTiles));
-        }
+            //swap left
+            if (openCol > 0) {
+                cpy(tempTiles);
+                swap(tempTiles, openRow, openCol, openRow, openCol - 1);
+                neighbors.push(new Board(tempTiles));
+            }
 
-        //swap right
-        if (openCol < n - 1) {
-            cpy(tempTiles);
-            swap(tempTiles, openRow, openCol, openRow, openCol + 1);
-            neighbors.push(new Board(tempTiles));
+            //swap right
+            if (openCol < n - 1) {
+                cpy(tempTiles);
+                swap(tempTiles, openRow, openCol, openRow, openCol + 1);
+                neighbors.push(new Board(tempTiles));
+            }
+
+            neighborsCreated = true;
         }
 
         return neighbors;
@@ -233,9 +247,12 @@ public class Board {
         }
 
         Board board = new Board(tiles);
+        Board twin = board.twin();
 
         StdOut.println(board.manhattan());
         StdOut.println(board.hamming());
+        StdOut.println(board);
+        StdOut.println(twin);
         StdOut.println(board);
     }
 }
