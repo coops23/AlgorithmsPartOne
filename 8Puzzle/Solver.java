@@ -1,40 +1,44 @@
 import edu.princeton.cs.algs4.In;
+import edu.princeton.cs.algs4.LinkedStack;
 import edu.princeton.cs.algs4.MinPQ;
-import edu.princeton.cs.algs4.Stack;
 import edu.princeton.cs.algs4.StdOut;
 
 import java.util.Comparator;
 
 public class Solver {
     private int moves;
-    private Stack<Board> solution;
+    private LinkedStack<Board> solution;
 
     public Solver(
             Board initial)           // find a solution to the initial board (using the A* algorithm)
     {
         Node searchNode;
-        Node nextSearch;
         MinPQ<Node> minPq = new MinPQ<Node>();
-        solution = new Stack<Board>();
+
+        solution = new LinkedStack<Board>();
         moves = 0;
+        Board temp;
 
         searchNode = new Node(null, initial, moves);
-        minPq.insert(searchNode);
-        solution.push(searchNode.board);
+        temp = searchNode.board;
+        solution.push(temp);
 
-        solution.push(initial);
         while (!searchNode.board.isGoal()) {
+
+
             Iterable<Board> it = searchNode.board.neighbors();
-            moves += 1;
+
             for (Board i : it) {
-                Node nextNode = new Node(searchNode.board, i, moves);
-                if (!nextNode.board.equals(nextNode.predecessor)) {
+                if (!i.equals(searchNode.predecessor)) {
+                    Node nextNode = new Node(searchNode.board, i, moves + 1);
                     minPq.insert(nextNode);
                 }
             }
 
             searchNode = minPq.delMin();
-            solution.push(searchNode.board);
+            temp = searchNode.board;
+            solution.push(temp);
+            moves++;
         }
     }
 
@@ -50,18 +54,21 @@ public class Solver {
 
     public Iterable<Board> solution()      // sequence of boards in a shortest solution; null if unsolvable
     {
-        return solution;
+        if (isSolvable()) { return solution; }
+        else { return null; }
     }
 
     private class Node implements Comparable<Node> {
         private Board predecessor;
         private Board board;
         private int moves;
+        private int manhatten;
 
         public Node(Board before, Board now, int moveCount) {
             predecessor = before;
             board = now;
             moves = moveCount;
+            manhatten = now.manhattan();
         }
 
         public int compare(Node a, Node b) {
@@ -82,24 +89,27 @@ public class Solver {
         };
     }
 
-    public static void main(String[] args) // solve a slider puzzle (given below)
-    {
-        In in = new In("puzzle01.txt");
+    public static void main(String[] args) {
+
+        String file = "puzzle07.txt";
+        In in = new In(file);
         int n = in.readInt();
-        int[][] tiles = new int[n][n];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                tiles[i][j] = in.readInt();
-            }
-        }
+        int[][] blocks = new int[n][n];
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+                blocks[i][j] = in.readInt();
+        Board initial = new Board(blocks);
 
-        Solver solver = new Solver(new Board(tiles));
+        // solve the puzzle
+        Solver solver = new Solver(initial);
 
-        StdOut.println(solver.moves());
-
-        Iterable<Board> it = solver.solution();
-        for (Board i : it) {
-            StdOut.println(i);
+        // print solution to standard output
+        if (!solver.isSolvable())
+            StdOut.println("No solution possible");
+        else {
+            StdOut.println("Minimum number of moves = " + solver.moves() + " for " + file);
+            for (Board board : solver.solution())
+                StdOut.println(board);
         }
     }
 

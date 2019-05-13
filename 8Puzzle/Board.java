@@ -49,57 +49,61 @@ public class Board {
 
     public int hamming()                   // number of blocks out of place
     {
-        int count = 0;
-        int iter = 1;
+        int hamming = 0;
 
-        for (int i = 0; i < n; i++) {
-            for (int y = 0; y < n; y++) {
-                if (tiles[i][y] != iter) {
-                    count++;
-                }
-                iter++;
+        int pos = 1;
+        while (pos < (n * n)) {
+            int i = row(pos - 1);
+            int y = col(pos - 1);
+            int value = tiles[i][y];
+
+            if(value != pos)
+            {
+                hamming++;
             }
+
+            pos++;
         }
 
-        return count;
+        return hamming;
     }
 
     public int manhattan()                 // sum of Manhattan distances between blocks and goal
     {
-        int count = 0;
-        int iter = 1;
+        int manhatten = 0;
 
-        for (int i = 0; i < n; i++) {
-            for (int y = 0; y < n; y++) {
-                if (tiles[i][y] != iter) {
-                    //say 1 was in position i = 2 and y = 2
-                    int desiredRow = tiles[i][y] / n;
-                    int desiredColumn = tiles[i][y] - (desiredRow * n) - 1;
-                    int deltaRow = java.lang.Math.abs(desiredRow - i);
-                    int deltaColumn = java.lang.Math.abs(desiredColumn - y);
-                    int delta = deltaColumn + deltaRow;
+        int pos = 1;
+        while (pos <= (n * n)) {
+            int i = row(pos - 1);
+            int y = col(pos - 1);
+            int value = tiles[i][y];
 
-                    count += delta;
-                }
-                iter++;
+            if(value != 0)
+            {
+                manhatten += java.lang.Math.abs(row(value - 1) - i);
+                manhatten += java.lang.Math.abs(col(value - 1) - y);
             }
+
+            pos++;
         }
 
-        return count;
+        return manhatten;
     }
 
     public boolean isGoal()                // is this board the goal board?
     {
-        int iter = 1;
-        for (int i = 0; i < n; i++) {
-            for (int y = 0; y < n; y++) {
-                if (tiles[i][y] != iter) {
-                    if (iter != n * n) {
-                        return false;
-                    }
-                }
-                iter++;
+        int pos = 1;
+        while (pos < (n * n) - 1) {
+            int i = row(pos - 1);
+            int y = col(pos - 1);
+            int value = tiles[i][y];
+
+            if (tiles[i][y] != pos)
+            {
+                return false;
             }
+
+            pos++;
         }
 
         return true;
@@ -176,12 +180,12 @@ public class Board {
 
     public String toString()               // string representation of this board (in the output format specified below)
     {
-        String message = "";
+        String message = n + "\n";
 
         for (int i = 0; i < n; i++) {
-            String row = "";
+            String row = " ";
             for (int y = 0; y < n; y++) {
-                row += String.valueOf(tiles[i][y]) + " ";
+                row += String.valueOf(tiles[i][y]) + "  ";
             }
             row += "\n";
 
@@ -219,7 +223,7 @@ public class Board {
 
     public static void main(String[] args) // unit tests (not graded)
     {
-        In in = new In("puzzle2x2-00.txt");
+        In in = new In("puzzle2x2-unsolvable1.txt");
         int n = in.readInt();
         int[][] tiles = new int[n][n];
         for (int i = 0; i < n; i++) {
@@ -229,23 +233,9 @@ public class Board {
         }
 
         Board board = new Board(tiles);
-        Board twin = board.twin();
 
-        StdOut.println(board.toString());
-        StdOut.println(board.isGoal());
-        StdOut.println(twin.toString());
-        StdOut.println(twin.isGoal());
-
-        StdOut.println("Now printing out neighbors");
-        Iterable<Board> it = board.neighbors();
-        for (Board i : it) {
-            StdOut.println(i);
-            StdOut.println(i.equals(board));
-        }
-
-        StdOut.println(board.equals(board));
-        StdOut.println(board.equals(null));
-        Board board2 = new Board(tiles);
-        StdOut.println(board2.equals(board));
+        StdOut.println(board.manhattan());
+        StdOut.println(board.hamming());
+        StdOut.println(board);
     }
 }
