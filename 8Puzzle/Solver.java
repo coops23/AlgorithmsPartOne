@@ -9,21 +9,24 @@ public class Solver {
     private int moves;
     private Stack<Node> validNodes;
     private Stack<Board> solution;
+    private final boolean isSolvable;
 
     public Solver(
             Board initial)           // find a solution to the initial board (using the A* algorithm)
     {
-        Node searchNode;
+        Node searchNode, twinSearchNode;
         MinPQ<Node> minPq = new MinPQ<Node>();
+        MinPQ<Node> twinMinPq = new MinPQ<Node>();
         validNodes = new Stack<Node>();
         solution = new Stack<Board>();
         moves = 0;
+        int twinMoves = 0;
 
         searchNode = new Node(null, initial, 0);
         validNodes.push(searchNode);
-        while (!searchNode.board.isGoal()) {
+        twinSearchNode = new Node(null, initial.twin(), 0);
+        while (!searchNode.board.isGoal() && !twinSearchNode.board.isGoal()) {
             Iterable<Board> it = searchNode.board.neighbors();
-
             for (Board i : it) {
                 if (searchNode.predecessor == null) {
                     Node nextNode = new Node(searchNode, i, moves + 1);
@@ -38,24 +41,41 @@ public class Solver {
             searchNode = minPq.delMin();
             validNodes.push(searchNode);
             moves = searchNode.moves;
+
+            Iterable<Board> twinIt = twinSearchNode.board.neighbors();
+            for (Board i : twinIt) {
+                if (twinSearchNode.predecessor == null) {
+                    Node nextNode = new Node(twinSearchNode, i, twinMoves + 1);
+                    twinMinPq.insert(nextNode);
+                }
+                else if (!i.equals(twinSearchNode.predecessor.board)) {
+                    Node nextNode = new Node(twinSearchNode, i, twinMoves + 1);
+                    twinMinPq.insert(nextNode);
+                }
+            }
+
+            twinSearchNode = twinMinPq.delMin();
+            twinMoves = twinSearchNode.moves;
         }
 
-        Node nextNode = null;
-        for (Node node : validNodes) {
-            if (node.board.isGoal()) {
-                solution.push(node.board);
-                nextNode = node.predecessor;
-            }
-            else if (node.board.equals(nextNode.board)) {
-                solution.push(node.board);
-                nextNode = node.predecessor;
-            }
+        if (twinSearchNode.board.isGoal() && !searchNode.board.isGoal()) {
+            isSolvable = false;
+            return;
         }
+        else {
+            isSolvable = true;
+        }
+
+        while (searchNode != null) {
+            solution.push(searchNode.board);
+            searchNode = searchNode.predecessor;
+        }
+
     }
 
     public boolean isSolvable()            // is the initial board solvable?
     {
-        return true;
+        return isSolvable;
     }
 
     public int moves()                     // min number of moves to solve initial board; -1 if unsolvable
@@ -121,7 +141,7 @@ public class Solver {
 
     public static void main(String[] args) {
 
-        String file = "puzzle07.txt";
+        String file = "puzzle4x4-09.txt";
         In in = new In(file);
         int n = in.readInt();
         int[][] blocks = new int[n][n];
