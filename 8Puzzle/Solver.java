@@ -7,17 +7,20 @@ import java.util.Comparator;
 
 public class Solver {
     private int moves;
-    private Stack<Node> validNodes;
     private Stack<Board> solution;
     private final boolean isSolvable;
 
     public Solver(
             Board initial)           // find a solution to the initial board (using the A* algorithm)
     {
+        if (initial == null) {
+            throw new java.lang.IllegalArgumentException();
+        }
+
         Node searchNode, twinSearchNode;
         MinPQ<Node> minPq = new MinPQ<Node>();
         MinPQ<Node> twinMinPq = new MinPQ<Node>();
-        validNodes = new Stack<Node>();
+        Stack<Node> validNodes = new Stack<Node>();
         solution = new Stack<Board>();
         moves = 0;
         int twinMoves = 0;
@@ -80,7 +83,10 @@ public class Solver {
 
     public int moves()                     // min number of moves to solve initial board; -1 if unsolvable
     {
-        return moves;
+        if (isSolvable)
+            return moves;
+        else
+            return -1;
     }
 
     public Iterable<Board> solution()      // sequence of boards in a shortest solution; null if unsolvable
