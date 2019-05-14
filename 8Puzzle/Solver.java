@@ -1,44 +1,55 @@
 import edu.princeton.cs.algs4.In;
-import edu.princeton.cs.algs4.LinkedStack;
 import edu.princeton.cs.algs4.MinPQ;
+import edu.princeton.cs.algs4.Stack;
 import edu.princeton.cs.algs4.StdOut;
 
 import java.util.Comparator;
 
 public class Solver {
     private int moves;
-    private LinkedStack<Board> solution;
+    private Stack<Node> validNodes;
+    private Stack<Board> solution;
 
     public Solver(
             Board initial)           // find a solution to the initial board (using the A* algorithm)
     {
         Node searchNode;
         MinPQ<Node> minPq = new MinPQ<Node>();
-
-        solution = new LinkedStack<Board>();
+        validNodes = new Stack<Node>();
+        solution = new Stack<Board>();
         moves = 0;
-        Board temp;
 
-        searchNode = new Node(null, initial, moves);
-        temp = searchNode.board;
-        solution.push(temp);
-
+        searchNode = new Node(null, initial, 0);
+        validNodes.push(searchNode);
         while (!searchNode.board.isGoal()) {
-
-
             Iterable<Board> it = searchNode.board.neighbors();
 
             for (Board i : it) {
-                if (!i.equals(searchNode.predecessor)) {
-                    Node nextNode = new Node(searchNode.board, i, moves + 1);
+                if (searchNode.predecessor == null) {
+                    Node nextNode = new Node(searchNode, i, moves + 1);
+                    minPq.insert(nextNode);
+                }
+                else if (!i.equals(searchNode.predecessor.board)) {
+                    Node nextNode = new Node(searchNode, i, moves + 1);
                     minPq.insert(nextNode);
                 }
             }
 
             searchNode = minPq.delMin();
-            temp = searchNode.board;
-            solution.push(temp);
-            moves++;
+            validNodes.push(searchNode);
+            moves = searchNode.moves;
+        }
+
+        Node nextNode = null;
+        for (Node node : validNodes) {
+            if (node.board.isGoal()) {
+                solution.push(node.board);
+                nextNode = node.predecessor;
+            }
+            else if (node.board.equals(nextNode.board)) {
+                solution.push(node.board);
+                nextNode = node.predecessor;
+            }
         }
     }
 
@@ -54,34 +65,53 @@ public class Solver {
 
     public Iterable<Board> solution()      // sequence of boards in a shortest solution; null if unsolvable
     {
-        if (isSolvable()) { return solution; }
-        else { return null; }
+        if (isSolvable()) {
+            return solution;
+        }
+        else {
+            return null;
+        }
     }
 
     private class Node implements Comparable<Node> {
-        private Board predecessor;
+        private Node predecessor;
         private Board board;
         private int moves;
         private int manhatten;
 
-        public Node(Board before, Board now, int moveCount) {
+        public Node(Node before, Board now, int moveCount) {
             predecessor = before;
             board = now;
             moves = moveCount;
-            manhatten = now.manhattan();
+            manhatten = now.manhattan() + moveCount;
+        }
+
+        public int getManhatten() {
+            return manhatten;
+        }
+
+        public int getMoves() {
+            return moves;
         }
 
         public int compare(Node a, Node b) {
-            return Integer.compare(a.board.manhattan() + a.moves, b.board.manhattan() + b.moves);
+            return Integer.compare(a.getManhatten(), b.getManhatten());
         }
 
         public int compareTo(Node that) {
             return compare(this, that);
         }
 
-        public Comparator<Node> manhattenComparitor
-                = new Comparator<Node>() {
+        public String toString() {
+            String message = "Move: " + moves + " Manhatten: " + board.manhattan() + " Priority: "
+                    + manhatten + " Hamming: " + board.hamming() + "\n";
 
+            message += board.toString();
+
+            return message;
+        }
+
+        public Comparator<Node> manhattenComparitor = new Comparator<Node>() {
             public int compare(Node a, Node b) {
                 return a.compare(a, b);
             }
@@ -108,8 +138,9 @@ public class Solver {
             StdOut.println("No solution possible");
         else {
             StdOut.println("Minimum number of moves = " + solver.moves() + " for " + file);
-            for (Board board : solver.solution())
+            for (Board board : solver.solution()) {
                 StdOut.println(board);
+            }
         }
     }
 

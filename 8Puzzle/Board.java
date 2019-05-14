@@ -104,7 +104,7 @@ public class Board {
     public boolean isGoal()                // is this board the goal board?
     {
         int pos = 1;
-        while (pos < (n * n) - 1) {
+        while (pos < (n * n)) {
             int i = row(pos - 1);
             int y = col(pos - 1);
 
@@ -130,8 +130,8 @@ public class Board {
 
     public boolean equals(Object y)        // does this board equal y?
     {
-        if (y == this) return true;
         if (y == null) return false;
+        if (y == this) return true;
         if (y.getClass() != this.getClass()) return false;
 
         final Board that = (Board) y;
@@ -224,7 +224,7 @@ public class Board {
     private int col(int pos) {
         return pos - (row(pos) * n);
     }
-    
+
     public static void main(String[] args) // unit tests (not graded)
     {
         In in = new In("puzzle2x2-unsolvable1.txt");
