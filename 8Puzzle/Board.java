@@ -6,16 +6,15 @@ import edu.princeton.cs.algs4.StdRandom;
 public class Board {
     private final int[][] tiles;
     private final int n;
-    private Stack<Board> neighbors;
     private final int openRow;
     private final int openCol;
+    private int swapPos0;
+    private int swapPos1;
 
-    public Board(
-            int[][] blocks)           // construct a board from an n-by-n array of blocks (where blocks[i][j] = block in row i, column j)
-    {
+    public Board(int[][] blocks) {
         n = blocks.length;
         boolean openPositionFound = false;
-        neighbors = new Stack<Board>();
+
         tiles = new int[n][n];
 
         if (n <= 0) {
@@ -40,6 +39,20 @@ public class Board {
 
         openRow = x;
         openCol = j;
+
+        swapPos0 = 0;
+        int value = 0;
+        while (value == 0) {
+            swapPos0 = StdRandom.uniform(0, (n * n));
+            value = tiles[row(swapPos0)][col(swapPos0)];
+        }
+
+        swapPos1 = 0;
+        value = 0;
+        while (swapPos1 == swapPos0 || value == 0) {
+            swapPos1 = StdRandom.uniform(0, (n * n));
+            value = tiles[row(swapPos1)][col(swapPos1)];
+        }
     }
 
     public int dimension()                 // board dimension n
@@ -57,8 +70,7 @@ public class Board {
             int y = col(pos - 1);
             int value = tiles[i][y];
 
-            if(value != pos)
-            {
+            if (value != pos) {
                 hamming++;
             }
 
@@ -78,8 +90,7 @@ public class Board {
             int y = col(pos - 1);
             int value = tiles[i][y];
 
-            if(value != 0)
-            {
+            if (value != 0) {
                 manhatten += java.lang.Math.abs(row(value - 1) - i);
                 manhatten += java.lang.Math.abs(col(value - 1) - y);
             }
@@ -93,13 +104,11 @@ public class Board {
     public boolean isGoal()                // is this board the goal board?
     {
         int pos = 1;
-        while (pos < (n * n) - 1) {
+        while (pos < (n * n)) {
             int i = row(pos - 1);
             int y = col(pos - 1);
-            int value = tiles[i][y];
 
-            if (tiles[i][y] != pos)
-            {
+            if (tiles[i][y] != pos) {
                 return false;
             }
 
@@ -111,40 +120,36 @@ public class Board {
 
     public Board twin()                    // a board that is obtained by exchanging any pair of blocks
     {
-        int[][] tempTiles = new int[n][n];
+        int[][] twinTiles = new int[n][n];
         Board twin;
-        cpy(tempTiles);
 
         int value = 0;
         int pos0 = 0;
         while(value == 0)
         {
-            pos0 = StdRandom.uniform(0, (n * n) - 1);
+        int pos0 = StdRandom.uniform(0, (n * n) - 1);
             value = tempTiles[row(pos0)][col(pos0)];
         }
 
-        int pos1 = 0;
+
         value = 0;
-        while(value == 0 && pos1 == pos0) {
-            pos1 = StdRandom.uniform(0, (n * n) - 1);
+        while (pos1 == pos0) {
+            pos1 = StdRandom.uniform(0, n * n - 1);
             value = tempTiles[row(pos1)][col(pos1)];
-        }
-
-        swap(tempTiles, row(pos0), col(pos0), row(pos1), col(pos1));
+        swap(twinTiles, row(swapPos0), col(swapPos0), row(swapPos1), col(swapPos1));
         twin = new Board(tempTiles);
-
+        return new Board(tempTiles);
         return twin;
     }
 
     public boolean equals(Object y)        // does this board equal y?
     {
-        if (y == this) return true;
         if (y == null) return false;
+        if (y == this) return true;
         if (y.getClass() != this.getClass()) return false;
 
         final Board that = (Board) y;
 
-        if(this.n != that.n)
         {
             return false;
         }
@@ -162,6 +167,8 @@ public class Board {
 
     public Iterable<Board> neighbors()     // all neighboring boards
     {
+        Stack<Board> neighbors = new Stack<Board>();
+
         int[][] tempTiles = new int[n][n];
         //swap upper
         if (openRow > 0) {
@@ -233,10 +240,6 @@ public class Board {
         return pos - (row(pos) * n);
     }
 
-    private int pos(int row, int col) {
-        return (row * n) + col;
-    }
-
     public static void main(String[] args) // unit tests (not graded)
     {
         In in = new In("puzzle2x2-unsolvable1.txt");
@@ -249,11 +252,13 @@ public class Board {
         }
 
         Board board = new Board(tiles);
+        Board twin = board.twin();
 
         StdOut.println(board.manhattan());
         StdOut.println(board.hamming());
         StdOut.println(board);
         Board twin = board.twin();
         StdOut.println(twin);
+        StdOut.println(board);
     }
 }

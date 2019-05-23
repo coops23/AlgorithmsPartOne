@@ -1,87 +1,143 @@
 import edu.princeton.cs.algs4.In;
-import edu.princeton.cs.algs4.LinkedStack;
 import edu.princeton.cs.algs4.MinPQ;
+import edu.princeton.cs.algs4.Stack;
 import edu.princeton.cs.algs4.StdOut;
 
 import java.util.Comparator;
 
 public class Solver {
     private int moves;
-    private LinkedStack<Board> solution;
+    private Stack<Board> solution;
+    private final boolean isSolvable;
 
     public Solver(
             Board initial)           // find a solution to the initial board (using the A* algorithm)
     {
-        Node searchNode;
+        if (initial == null) {
+            throw new java.lang.IllegalArgumentException();
+        }
+
+        Node searchNode, twinSearchNode;
         MinPQ<Node> minPq = new MinPQ<Node>();
-
-        solution = new LinkedStack<Board>();
+        MinPQ<Node> twinMinPq = new MinPQ<Node>();
+        Stack<Node> validNodes = new Stack<Node>();
+        solution = new Stack<Board>();
         moves = 0;
-        Board temp;
+        int twinMoves = 0;
 
-        searchNode = new Node(null, initial, moves);
-        temp = searchNode.board;
-        solution.push(temp);
-
-        while (!searchNode.board.isGoal()) {
-
-
+        searchNode = new Node(null, initial, 0);
+        validNodes.push(searchNode);
+        twinSearchNode = new Node(null, initial.twin(), 0);
+        while (!searchNode.board.isGoal() && !twinSearchNode.board.isGoal()) {
             Iterable<Board> it = searchNode.board.neighbors();
-
             for (Board i : it) {
-                if (!i.equals(searchNode.predecessor)) {
-                    Node nextNode = new Node(searchNode.board, i, moves + 1);
+                if (searchNode.predecessor == null) {
+                    Node nextNode = new Node(searchNode, i, moves + 1);
+                    minPq.insert(nextNode);
+                }
+                else if (!i.equals(searchNode.predecessor.board)) {
+                    Node nextNode = new Node(searchNode, i, moves + 1);
                     minPq.insert(nextNode);
                 }
             }
 
             searchNode = minPq.delMin();
-            temp = searchNode.board;
-            solution.push(temp);
-            moves++;
+            validNodes.push(searchNode);
+            moves = searchNode.moves;
+
+            Iterable<Board> twinIt = twinSearchNode.board.neighbors();
+            for (Board i : twinIt) {
+                if (twinSearchNode.predecessor == null) {
+                    Node nextNode = new Node(twinSearchNode, i, twinMoves + 1);
+                    twinMinPq.insert(nextNode);
+                }
+                else if (!i.equals(twinSearchNode.predecessor.board)) {
+                    Node nextNode = new Node(twinSearchNode, i, twinMoves + 1);
+                    twinMinPq.insert(nextNode);
+                }
+            }
+
+            twinSearchNode = twinMinPq.delMin();
+            twinMoves = twinSearchNode.moves;
         }
+
+        if (twinSearchNode.board.isGoal() && !searchNode.board.isGoal()) {
+            isSolvable = false;
+            return;
+        }
+        else {
+            isSolvable = true;
+        }
+
+        while (searchNode != null) {
+            solution.push(searchNode.board);
+            searchNode = searchNode.predecessor;
+        }
+
     }
 
     public boolean isSolvable()            // is the initial board solvable?
     {
-        return true;
+        return isSolvable;
     }
 
     public int moves()                     // min number of moves to solve initial board; -1 if unsolvable
     {
-        return moves;
+        if (isSolvable)
+            return moves;
+        else
+            return -1;
     }
 
     public Iterable<Board> solution()      // sequence of boards in a shortest solution; null if unsolvable
     {
-        if (isSolvable()) { return solution; }
-        else { return null; }
+        if (isSolvable()) {
+            return solution;
+        }
+        else {
+            return null;
+        }
     }
 
     private class Node implements Comparable<Node> {
-        private Board predecessor;
+        private Node predecessor;
         private Board board;
         private int moves;
         private int manhatten;
 
-        public Node(Board before, Board now, int moveCount) {
+        public Node(Node before, Board now, int moveCount) {
             predecessor = before;
             board = now;
             moves = moveCount;
-            manhatten = now.manhattan();
+            manhatten = now.manhattan() + moveCount;
+        }
+
+        public int getManhatten() {
+            return manhatten;
+        }
+
+        public int getMoves() {
+            return moves;
         }
 
         public int compare(Node a, Node b) {
-            return Integer.compare(a.board.manhattan() + a.moves, b.board.manhattan() + b.moves);
+            return Integer.compare(a.getManhatten(), b.getManhatten());
         }
 
         public int compareTo(Node that) {
             return compare(this, that);
         }
 
-        public Comparator<Node> manhattenComparitor
-                = new Comparator<Node>() {
+        public String toString() {
+            String message = "Move: " + moves + " Manhatten: " + board.manhattan() + " Priority: "
+                    + manhatten + " Hamming: " + board.hamming() + "\n";
 
+            message += board.toString();
+
+            return message;
+        }
+
+        public Comparator<Node> manhattenComparitor = new Comparator<Node>() {
             public int compare(Node a, Node b) {
                 return a.compare(a, b);
             }
@@ -91,7 +147,7 @@ public class Solver {
 
     public static void main(String[] args) {
 
-        String file = "puzzle07.txt";
+        String file = "puzzle4x4-09.txt";
         In in = new In(file);
         int n = in.readInt();
         int[][] blocks = new int[n][n];
@@ -108,8 +164,9 @@ public class Solver {
             StdOut.println("No solution possible");
         else {
             StdOut.println("Minimum number of moves = " + solver.moves() + " for " + file);
-            for (Board board : solver.solution())
+            for (Board board : solver.solution()) {
                 StdOut.println(board);
+            }
         }
     }
 
