@@ -19,6 +19,11 @@ public class KdTreeVisualizer {
         RectHV rect = new RectHV(0.0, 0.0, 1.0, 1.0);
         StdDraw.enableDoubleBuffering();
         KdTree kdtree = new KdTree();
+
+        StdDraw.setPenRadius(0.001);
+        StdDraw.setPenColor(0x00, 0x00, 0x00);
+        StdDraw.rectangle(0.2, 0.2, 0.2, 0.2);
+        StdDraw.show();
         while (true) {
             if (StdDraw.isMousePressed()) {
                 double x = StdDraw.mouseX();
