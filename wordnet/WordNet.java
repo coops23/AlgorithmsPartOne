@@ -5,6 +5,7 @@ import edu.princeton.cs.algs4.StdOut;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class WordNet {
     private final Digraph digraph;
@@ -16,38 +17,33 @@ public class WordNet {
         //check if arguments to constructor are null
         if (synsets == null || hypernyms == null) throw new IllegalArgumentException();
 
-        //check if there is a single root
-
-        //check if any noun argument in distance() or sap() is not a WordNet noun
-
         In in = new In(synsets);
         synsetTable = new HashMap<Integer, String>();
-        int count = 0;
         while (in.hasNextLine()) {
             String[] temp = in.readLine().split(",");
             int id = Integer.parseInt(temp[0]);
             String synset = temp[1];
             synsetTable.put(id, synset);
-            count++;
         }
 
-
         in = new In(hypernyms);
-        HashMap<Integer, Integer> hypernymTable = new HashMap<Integer, Integer>();
+        digraph = new Digraph(synsetTable.size());
         while (in.hasNextLine()) {
             String[] data = in.readLine().split(",");
-            int id = Integer.parseInt(data[0]);
+            int v = Integer.parseInt(data[0]);
             for (int i = 1; i < data.length; i++) {
-                int hypernym = Integer.parseInt(data[i]);
-                hypernymTable.put(id, hypernym);
+                int w = Integer.parseInt(data[i]);
+                digraph.addEdge(v, w);
             }
         }
 
-        digraph = new Digraph(hypernymTable.size() + 1);
-        for (int key : hypernymTable.keySet()) {
-            int hypernym = hypernymTable.get(key);
-            digraph.addEdge(key, hypernym);
+        //check if there is a single root
+        int indegreeIsZero = 0;
+        for (int i = 0; i < digraph.V(); i++) {
+            if (digraph.outdegree(i) == 0) indegreeIsZero++;
         }
+
+        if (indegreeIsZero > 1) throw new IllegalArgumentException();
     }
 
     // returns all WordNet nouns
@@ -70,8 +66,10 @@ public class WordNet {
     // is the word a WordNet noun?
     public boolean isNoun(String word) {
         for (int i = 0; i < synsetTable.size(); i++) {
-            if (synsetTable.get(i).contains(word)) {
-                return true;
+            String item = synsetTable.get(i);
+            String[] items = item.split(" ");
+            for (String subItem : items) {
+                if (subItem.equals(word)) return true;
             }
         }
 
@@ -80,30 +78,58 @@ public class WordNet {
 
     // distance between nounA and nounB (defined below)
     public int distance(String nounA, String nounB) {
-        if (!isNoun(nounA) || !isNoun(nounB)) {
+        //check if any noun argument in distance() or sap() is not a WordNet noun
+        if (!isNoun(nounA) || !isNoun(nounB) || nounA == null || nounB == null) {
             throw new IllegalArgumentException();
         }
 
-        int a = 0;
-        int b = 0;
-        boolean a_set = false;
-        boolean b_set = false;
+        List<Integer> a = new ArrayList<Integer>();
+        List<Integer> b = new ArrayList<Integer>();
 
         for (int i = 0; i < synsetTable.size(); i++) {
-            if (a_set && b_set) break;
+            for (String noun : synsetTable.get(i).split(" ")) {
+                if (noun.equals(nounA)) a.add(i);
+                if (noun.equals(nounB)) b.add(i);
+            }
+        }
 
-            if (synsetTable.get(i).contains(nounA)) {
-                if (!a_set) {
-                    a = i;
-                    a_set = true;
-                }
+        BreadthFirstDirectedPaths nounASearch = new BreadthFirstDirectedPaths(digraph, a);
+        BreadthFirstDirectedPaths nounBSearch = new BreadthFirstDirectedPaths(digraph, b);
+
+        int shortestCommonAncestor = 0;
+        int shortestDistanceA = digraph.V();
+        int shortestDistanceB = digraph.V();
+        boolean valid = false;
+        for (int i = 0; i < digraph.V(); i++) {
+            if (nounASearch.hasPathTo(i) && nounBSearch.hasPathTo(i)) {
+                int distanceA = nounASearch.distTo(i);
+                int distanceB = nounBSearch.distTo(i);
+                valid = true;
+                if (shortestDistanceA > distanceA) shortestDistanceA = distanceA;
+                if (shortestDistanceB > distanceB) shortestDistanceB = distanceB;
             }
-            if (synsetTable.get(i).contains(nounB)) {
-                if (!b_set) {
-                    b = i;
-                    b_set = true;
-                }
-            }
+        }
+
+        if (!valid) throw new ArithmeticException();
+
+        return shortestDistanceA + shortestDistanceB;
+    }
+
+    // a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
+    // in a shortest ancestral path (defined below)
+    public String sap(String nounA, String nounB) {
+        //check if any noun argument in distance() or sap() is not a WordNet noun
+        if (!isNoun(nounA) || !isNoun(nounB) || nounA == null || nounB == null) {
+            throw new IllegalArgumentException();
+        }
+
+        List<Integer> a = new ArrayList<Integer>();
+        List<Integer> b = new ArrayList<Integer>();
+
+        for (int i = 0; i < synsetTable.size(); i++) {
+            String entry = synsetTable.get(i);
+            if (entry.contains(nounA)) a.add(i);
+            if (entry.contains(nounB)) b.add(i);
         }
 
         BreadthFirstDirectedPaths nounASearch = new BreadthFirstDirectedPaths(digraph, a);
@@ -117,40 +143,15 @@ public class WordNet {
                 int distanceA = nounASearch.distTo(i);
                 int distanceB = nounBSearch.distTo(i);
 
-                if (shortestDistanceA > distanceA) shortestDistanceA = distanceA;
-                if (shortestDistanceB > distanceB) shortestDistanceB = distanceB;
-            }
-        }
+                if (shortestDistanceA > distanceA) {
+                    shortestDistanceA = distanceA;
+                    shortestCommonAncestor = i;
+                }
 
-        return shortestDistanceA + shortestDistanceB;
-    }
-
-    // a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
-    // in a shortest ancestral path (defined below)
-    public String sap(String nounA, String nounB) {
-        if (!isNoun(nounA) || !isNoun(nounB)) {
-            throw new IllegalArgumentException();
-        }
-
-        int a = 0;
-        int b = 0;
-
-        for (int i = 0; i < synsetTable.size(); i++) {
-            if (synsetTable.get(i).contains(nounA)) {
-                a = i;
-            }
-            if (synsetTable.get(i).contains(nounB)) {
-                b = i;
-            }
-        }
-
-        BreadthFirstDirectedPaths nounASearch = new BreadthFirstDirectedPaths(digraph, a);
-        BreadthFirstDirectedPaths nounBSearch = new BreadthFirstDirectedPaths(digraph, b);
-
-        int shortestCommonAncestor = 0;
-        for (int i = 0; i < digraph.V(); i++) {
-            if (nounASearch.hasPathTo(i) && nounBSearch.hasPathTo(i)) {
-                shortestCommonAncestor = i;
+                if (shortestDistanceB > distanceB) {
+                    shortestDistanceB = distanceB;
+                    shortestCommonAncestor = i;
+                }
             }
         }
 
@@ -159,11 +160,14 @@ public class WordNet {
 
     // do unit testing of this class
     public static void main(String[] args) {
-        WordNet wordNet = new WordNet("synsets.txt", "hypernyms.txt");
+        WordNet wordNet = new WordNet("synsets6.txt", "hypernyms6TwoAncestors.txt");
 
-        String nounA = "quadrangle";
-        String nounB = "mountain_devil";
+        String nounA = "b";
+        String nounB = "d";
         StdOut.println(wordNet.distance(nounA, nounB));
         StdOut.println(wordNet.sap(nounA, nounB));
+
+        String word = "d";
+        StdOut.println(wordNet.isNoun(word));
     }
 }
