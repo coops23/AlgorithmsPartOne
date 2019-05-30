@@ -97,22 +97,19 @@ public class WordNet {
         BreadthFirstDirectedPaths nounBSearch = new BreadthFirstDirectedPaths(digraph, b);
 
         int shortestCommonAncestor = 0;
-        int shortestDistanceA = digraph.V();
-        int shortestDistanceB = digraph.V();
+        int shortestDistance = digraph.V() * 2;
         boolean valid = false;
         for (int i = 0; i < digraph.V(); i++) {
             if (nounASearch.hasPathTo(i) && nounBSearch.hasPathTo(i)) {
-                int distanceA = nounASearch.distTo(i);
-                int distanceB = nounBSearch.distTo(i);
+                int distance = nounASearch.distTo(i) + nounBSearch.distTo(i);
+                if (shortestDistance > distance) shortestDistance = distance;
                 valid = true;
-                if (shortestDistanceA > distanceA) shortestDistanceA = distanceA;
-                if (shortestDistanceB > distanceB) shortestDistanceB = distanceB;
             }
         }
 
         if (!valid) throw new ArithmeticException();
 
-        return shortestDistanceA + shortestDistanceB;
+        return shortestDistance;
     }
 
     // a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
@@ -136,38 +133,34 @@ public class WordNet {
         BreadthFirstDirectedPaths nounBSearch = new BreadthFirstDirectedPaths(digraph, b);
 
         int shortestCommonAncestor = 0;
-        int shortestDistanceA = digraph.V();
-        int shortestDistanceB = digraph.V();
+        int shortestDistance = digraph.V() * 2;
+        boolean valid = false;
         for (int i = 0; i < digraph.V(); i++) {
             if (nounASearch.hasPathTo(i) && nounBSearch.hasPathTo(i)) {
-                int distanceA = nounASearch.distTo(i);
-                int distanceB = nounBSearch.distTo(i);
-
-                if (shortestDistanceA > distanceA) {
-                    shortestDistanceA = distanceA;
+                int distance = nounASearch.distTo(i) + nounBSearch.distTo(i);
+                if (shortestDistance > distance) {
+                    shortestDistance = distance;
                     shortestCommonAncestor = i;
                 }
-
-                if (shortestDistanceB > distanceB) {
-                    shortestDistanceB = distanceB;
-                    shortestCommonAncestor = i;
-                }
+                valid = true;
             }
         }
+
+        if (!valid) throw new ArithmeticException();
 
         return synsetTable.get(shortestCommonAncestor);
     }
 
     // do unit testing of this class
     public static void main(String[] args) {
-        WordNet wordNet = new WordNet("synsets6.txt", "hypernyms6TwoAncestors.txt");
+        WordNet wordNet = new WordNet("synsets.txt", "hypernyms.txt");
 
-        String nounA = "b";
-        String nounB = "d";
+        String nounA = "genus_Parrotiopsis";
+        String nounB = "ball-breaker";
         StdOut.println(wordNet.distance(nounA, nounB));
         StdOut.println(wordNet.sap(nounA, nounB));
 
-        String word = "d";
+        String word = "genus_Parrotiopsis";
         StdOut.println(wordNet.isNoun(word));
     }
 }
