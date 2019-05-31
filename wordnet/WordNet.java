@@ -14,7 +14,7 @@ public class WordNet {
     // constructor takes the name of the two input files
     public WordNet(String synsets, String hypernyms) {
         //check if arguments to constructor are null
-        if (synsets == null || hypernyms == null) throw new java.lang.IllegalArgumentException();
+        if (synsets == null || hypernyms == null) throw new IllegalArgumentException();
 
         In in = new In(synsets);
         synsetBag = new ST<String, Bag<Integer>>();
